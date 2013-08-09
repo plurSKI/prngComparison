@@ -1,0 +1,19 @@
+#!/bin/bash
+PATH="$PATH:."
+
+if [ $# -lt "1" ]
+then
+   echo "Usage: $0 <num_bytes>"
+   exit
+fi
+
+wget -q "http://www.random.org/integers/?num=$1&min=0&max=255&col=1&base=10&format=plain&rnd=new" -O /tmp/wget_unformatted
+parseNumbers /tmp/wget_unformatted > /tmp/wget_rnd
+clockDrift $1 > /tmp/clock_rnd
+aesRng $1 > /tmp/aes_rnd
+xorFiles /tmp/clock_rnd /tmp/wget_rnd /tmp/aes_rnd /dev/random -n=$1 
+
+shred -uzn 30 /tmp/wget_rnd
+shred -uzn 30 /tmp/wget_unformatted
+shred -uzn 30 /tmp/clock_rnd
+shred -uzn 30 /tmp/aes_rnd
